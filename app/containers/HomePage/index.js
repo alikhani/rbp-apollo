@@ -13,54 +13,79 @@ import React from 'react';
 import { FormattedMessage } from 'react-intl';
 import messages from './messages';
 import { graphql, compose } from 'react-apollo';
-import { connect } from 'react-redux';
 import gql from 'graphql-tag';
+
+import PostList from 'components/PostList';
 
 class HomePage extends React.Component { // eslint-disable-line react/prefer-stateless-function
 
+  constructor(props) {
+    super(props);
+    this.state = {
+      email: '',
+      password: '',
+      token: false,
+    };
+    this.signIn = this.signIn.bind(this);
+    this.changeEmail = this.changeEmail.bind(this);
+    this.changePassword = this.changePassword.bind(this);
+  }
+
+  signIn(e) {
+    e.preventDefault();
+    const credentials = { ...this.state };
+    this.props.signinUser(credentials);
+    // this.setState({ username: '', password: '' });
+  }
+
+  changeEmail(e) {
+    const email = e.target.value;
+    this.setState({ email: email.trim() });
+  }
+
+  changePassword(e) {
+    const password = e.target.value;
+    this.setState({ password: password.trim() });
+  }
+
   render() {
     console.log("props: ",this.props);
-    const { loading, allPosts } = this.props;
-
-    if (loading) {
-      return (
-        <div>
-          <h1>Loading...</h1>
-        </div>
-      );
-    }
-
     return (
       <div>
-        <h1><FormattedMessage {...messages.header} /></h1>
-        {allPosts ?
-          allPosts.map((post) =>
-            <div key={post.id}>
-              <img src={post.imageUrl} width={100} height={100} />
-              <span>{post.description}</span>
-            </div>
-          )
-          :
-          'No posts'
-        }
+        <input type="text" onChange={this.changeEmail} placeholder="email" />
+        <input type="text" onChange={this.changePassword} placeholder="password" />
+        <button onClick={this.signIn}>Login</button>
+        <PostList />
       </div>
     );
   }
 }
 
-const FeedQuery = gql`
-  query Posts {
-    allPosts {
-      id
-      imageUrl
-      description
+const SIGNIN_MUTATION = gql`
+  mutation signIn($email: String!, $password: String!) {
+    signinUser(
+      email: {
+        email: $email,
+        password: $password
+      }
+    ) {
+      token,
+      user { email }
     }
   }
 `;
 
-export default graphql(FeedQuery, {
-  options: {},
-  props({ data: { loading, allPosts } }) {
-    return { loading, allPosts };
+const withMutations = graphql(SIGNIN_MUTATION, {
+  props({ mutate }) {
+    return {
+      signinUser({ email, password }) {
+        return mutate({
+          variables: { email, password },
+        })
+        .then(result => console.log("user: ", result.data.signinUser));
+      },
+    };
   },
-})(HomePage);
+});
+
+export default withMutations(HomePage);
