@@ -15,12 +15,13 @@ import 'file?name=[name].[ext]!./.htaccess';
 // Import all the third party stuff
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { Provider } from 'react-redux';
 import { applyRouterMiddleware, Router, browserHistory } from 'react-router';
 import { syncHistoryWithStore } from 'react-router-redux';
 import { useScroll } from 'react-router-scroll';
+import { ApolloProvider } from 'react-apollo';
 import LanguageProvider from 'containers/LanguageProvider';
 import configureStore from './store';
+import apolloClient from './apollo';
 
 // Import i18n messages
 import { translationMessages } from './i18n';
@@ -33,7 +34,7 @@ import 'sanitize.css/sanitize.css';
 // Optionally, this could be changed to leverage a created history
 // e.g. `const browserHistory = useRouterHistory(createBrowserHistory)();`
 const initialState = {};
-const store = configureStore(initialState, browserHistory);
+const store = configureStore(initialState, apolloClient, browserHistory);
 
 // Sync history and store, as the react-router-redux reducer
 // is under the non-default key ("routing"), selectLocationState
@@ -54,7 +55,7 @@ const rootRoute = {
 
 const render = (translatedMessages) => {
   ReactDOM.render(
-    <Provider store={store}>
+    <ApolloProvider store={store} client={apolloClient}>
       <LanguageProvider messages={translatedMessages}>
         <Router
           history={history}
@@ -66,7 +67,7 @@ const render = (translatedMessages) => {
           }
         />
       </LanguageProvider>
-    </Provider>,
+    </ApolloProvider>,
     document.getElementById('app')
   );
 };
