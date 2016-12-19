@@ -1,6 +1,8 @@
 import ApolloClient, { createNetworkInterface } from 'apollo-client';
 
-const networkInterface = createNetworkInterface({ uri: process.env.APOLLO_URI });
+const apolloUri = 'http://localhost:3030/graphql'; //|| process.env.APOLLO_URI;
+
+const networkInterface = createNetworkInterface({ uri: apolloUri });
 
 networkInterface.use([{
   applyMiddleware(req, next) {

@@ -16,13 +16,14 @@ import { graphql, compose } from 'react-apollo';
 import gql from 'graphql-tag';
 
 import PostList from 'components/PostList';
+import PostForm from 'components/PostForm';
 
 class HomePage extends React.Component { // eslint-disable-line react/prefer-stateless-function
 
   constructor(props) {
     super(props);
     this.state = {
-      email: '',
+      username: '',
       password: '',
       token: false,
     };
@@ -34,13 +35,14 @@ class HomePage extends React.Component { // eslint-disable-line react/prefer-sta
   signIn(e) {
     e.preventDefault();
     const credentials = { ...this.state };
-    this.props.signinUser(credentials);
+    this.props.login(credentials);
+    // this.props.signinUser(credentials);
     // this.setState({ username: '', password: '' });
   }
 
   changeEmail(e) {
-    const email = e.target.value;
-    this.setState({ email: email.trim() });
+    const username = e.target.value;
+    this.setState({ username: username.trim() });
   }
 
   changePassword(e) {
@@ -55,37 +57,81 @@ class HomePage extends React.Component { // eslint-disable-line react/prefer-sta
         <input type="text" onChange={this.changeEmail} placeholder="email" />
         <input type="text" onChange={this.changePassword} placeholder="password" />
         <button onClick={this.signIn}>Login</button>
-        <PostList />
+        <PostForm />
+        {<PostList />}
       </div>
     );
   }
 }
 
-const SIGNIN_MUTATION = gql`
-  mutation signIn($email: String!, $password: String!) {
-    signinUser(
-      email: {
-        email: $email,
-        password: $password
-      }
+// localhost apollo
+const LOGIN_MUTATION = gql`
+  mutation login($username: String!, $password: String!) {
+    logIn(
+      username: $username,
+      password: $password
     ) {
       token,
-      user { email }
+      data {
+        _id
+        username
+      }
     }
   }
 `;
 
-const withMutations = graphql(SIGNIN_MUTATION, {
+const withMutations = graphql(LOGIN_MUTATION, {
   props({ mutate }) {
     return {
-      signinUser({ email, password }) {
+      login({ username, password }) {
         return mutate({
-          variables: { email, password },
+          variables: { username, password },
         })
-        .then(result => console.log("user: ", result.data.signinUser));
+        .then(result => {
+          console.log("user: ", result.data);
+          localStorage.setItem('token', result.data.logIn.token);
+        });
       },
     };
   },
 });
 
+// graph.cool
+// const SIGNIN_MUTATION = gql`
+//   mutation signIn($email: String!, $password: String!) {
+//     signinUser(
+//       email: {
+//         email: $email,
+//         password: $password
+//       }
+//     ) {
+//       token,
+//       user { email }
+//     }
+//   }
+// `;
+//
+// const withMutations = graphql(SIGNIN_MUTATION, {
+//   props({ mutate }) {
+//     return {
+//       signinUser({ email, password }) {
+//         return mutate({
+//           variables: { email, password },
+//         })
+//         .then(result => console.log("user: ", result.data.signinUser));
+//       },
+//     };
+//   },
+// });
+
+// const ListWithData = withCloneList(List);
+//
+// const ListWithDataAndState = connect(
+//   (state) => ({ listId: state.list.id }),
+//   (dispatch) => ({
+//     onSelectList(id) {
+//       dispatch(viewList(id));
+//     }
+//   }),
+// )(ListWithData);
 export default withMutations(HomePage);
